@@ -42,13 +42,20 @@ var budgetController = (function () {
 
 // UI controller
 var UIController = (function () {
+
+    var DOMstrings = {
+        inputType: '.add__type',
+        inputDescription: '.add__description',
+        inputValue: '.add__value'
+    };
+
     // public function/method to use in the other controller that will have to be in the object that the IIFE function will return
     return {
         getInput: function () {
             return {
-                type: document.querySelector('.add__type').value, // will be either inc (income) or exp (expense)
-                description: document.querySelector('.add__description').value,
-                value: document.querySelector('.add__value').value
+                type: document.querySelector(DOMstrings.inputType).value, // will be either inc (income) or exp (expense)
+                description: document.querySelector(DOMstrings.inputDescription).value,
+                value: document.querySelector(DOMstrings.inputValue).value
             };
         }
     }

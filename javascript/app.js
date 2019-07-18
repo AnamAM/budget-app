@@ -32,8 +32,62 @@
 
 // budget controller
 var budgetController = (function () {
+    // need a data model for expenses and incomes in this function
+    var Expense = function (id, description, value) {
+        this.id = id;
+        this.description = description;
+        this.value = value;
+    };
 
+    var Income = function (id, description, value) {
+        this.id = id;
+        this.description = description;
+        this.value = value;
+    }
+
+    // data structure to recieve data from the user
+    var data = {
+        allItems: {
+            exp: [],
+            inc: []
+        },
+        totals: {
+            exp: 0,
+            inc: 0
+        }
+    };
+
+    return {
+        addItem: function (type, des, val) {
+            var newItem, ID;
+            exp = [1, 2, 3, 4, 5, 6]
+            // create new ID
+            if (data.allItems[type].length > 10) {
+                ID: data.allItems[type][data.allItems[type].length - 1].id + 1;
+            }
+            else {
+                ID = 0;
+                console.log(ID);
+            }
+
+            // if the string is a 'exp', we can create a new expense using the designation and the value that we can pass in
+            if (type === 'exp') {
+                newItem = new Expense(ID, des, val);
+            }
+            // if the string is an 'inc', we can create a new income object based on the income function constructor 
+            else if (type === 'inc') {
+                newItem = new Income(ID, des, val);
+            }
+            // the type is either exp or inc which comes from the addItem function above 
+            data.allItems[type].push(newItem);
+            // newItem needs to be returned because the other module/function that's going to call this function can have direct access to the item that we just created
+            return newItem;
+        }
+    }
 })();
+
+
+
 
 // UI controller
 var UIController = (function () {
@@ -86,9 +140,10 @@ var controller = (function (budgetCtrl, UICtrl) {
 
         // 1. get the field input data
         var input = UICtrl.getInput();
-        console.log(input);
+        // console.log(input);
 
         // 2. add the item to the budget controller
+        budgetCtrl.addItem(input.type, input.description, input.value);
 
         // 3. add the item to the UI
 
@@ -97,6 +152,13 @@ var controller = (function (budgetCtrl, UICtrl) {
         // 5. display the budget on the UI 
 
         // console.log('it works');
+    };
+
+    return {
+        init: function () {
+            // console.log('application has started');
+            setupEventListeners();
+        }
     }
 
 })(budgetController, UIController);

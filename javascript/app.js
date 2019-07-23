@@ -43,7 +43,15 @@ var budgetController = (function () {
         this.id = id;
         this.description = description;
         this.value = value;
-    }
+    };
+
+    var calculateTotal = function (type) {
+        var sum = 0;
+        data.allItems[type].forEach(function(cur) {
+            sum += cur.value;
+        });
+        data.totals[type] = sum;
+    };
 
     // data structure to recieve data from the user
     var data = {
@@ -54,13 +62,16 @@ var budgetController = (function () {
         totals: {
             exp: 0,
             inc: 0
-        }
+        },
+        budget: 0,
+        // set to -1 incase the value is nonexistent; if there are no budget values and no total expenses on incomes, then there cannot be a percentage
+        percentage: -1
     };
 
     return {
         addItem: function (type, des, val) {
             var newItem, ID;
-            // exp = [1, 2, 3, 4, 5, 6]
+
             // create new ID
             if (data.allItems[type].length > 10) {
                 ID = data.allItems[type][data.allItems[type].length - 1].id + 1;
@@ -83,9 +94,37 @@ var budgetController = (function () {
             // newItem needs to be returned because the other module/function that's going to call this function can have direct access to the item that we just created
             return newItem;
         },
-        testing: function() {
+
+        calculateBudget: function () {
+            // calculate total income and expenses 
+            calculateTotal('exp');
+            calculateTotal('inc');
+
+            // calculate the budget: income - expenses
+            data.budget = data.totals.inc - data.totals.exp;
+
+            // calculate the percentage of income the at we spent
+            if (data.totals.inc > 0) {
+                data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
+            }
+            else {
+                data.percentage = -1;
+            }
+        },
+        
+        // method created to return something from data structure or from module so that you can get used to having functions that only retrieve or set data
+        getBudget: function () {
+            return {
+                budget: data.budget,
+                totalInc: data.totals.inc,
+                totalExp: data.totals.exp,
+                percentage: data.percentage
+            };
+        },
+
+        testing: function () {
             console.log(data);
-        } 
+        }
     }
 })();
 
@@ -134,7 +173,7 @@ var UIController = (function () {
         },
 
         clearFields: function () {
-            var fields, fieldsArr; 
+            var fields, fieldsArr;
 
             fields = document.querySelectorAll(DOMstrings.inputDescription + ', ' + DOMstrings.inputValue);
 
@@ -175,14 +214,16 @@ var controller = (function (budgetCtrl, UICtrl) {
         })
     }
 
-    var updateBudget = function() {
+    var updateBudget = function () {
 
         // 1. calculate the budget 
+        budgetCtrl.calculateBudget();
 
         // 2. return the budget
+        var budget = budgetCtrl.getBudget();
 
+        console.log(budget);
         // 3. display the budget on the UI 
-
     }
 
     // function that is called when someone hits the input button or enter key 
@@ -194,16 +235,16 @@ var controller = (function (budgetCtrl, UICtrl) {
         console.log(input);
 
         if (input.description !== "" && !isNaN(input.value) && input.value > 0) {
-            
+
             // 2. add the item to the budget controller
             newItem = budgetCtrl.addItem(input.type, input.description, input.value);
-    
+
             // 3. add the item to the UI
             UICtrl.addListItem(newItem, input.type);
-    
+
             // 4. clear the fields
-            UICtrl.clearFields(); 
-    
+            UICtrl.clearFields();
+
             // 5. calculate and update budget
             updateBudget();
         }

@@ -47,7 +47,7 @@ var budgetController = (function () {
 
     var calculateTotal = function (type) {
         var sum = 0;
-        data.allItems[type].forEach(function(cur) {
+        data.allItems[type].forEach(function (cur) {
             sum += cur.value;
         });
         data.totals[type] = sum;
@@ -111,7 +111,7 @@ var budgetController = (function () {
                 data.percentage = -1;
             }
         },
-        
+
         // method created to return something from data structure or from module so that you can get used to having functions that only retrieve or set data
         getBudget: function () {
             return {
@@ -138,6 +138,10 @@ var UIController = (function () {
         inputBtn: '.add__btn',
         incomeContainer: '.income__list',
         expensesContainer: '.expenses__list',
+        budgetLabel: '.budget__value',
+        incomeLabel: '.budget__income--value',
+        expenseLabel: '.budget__expenses--value',
+        percentageLabel: '.budget__expenses--percentage'
     };
 
     // public function/method to use in the other controller that will have to be in the object that the IIFE function will return
@@ -187,6 +191,19 @@ var UIController = (function () {
             fieldsArr[0].focus();
         },
 
+        displayBudget: function (obj) {
+            document.querySelector(DOMstrings.budgetLabel).textContent = obj.budget;
+            document.querySelector(DOMstrings.incomeLabel).textContent = obj.totalInc;
+            document.querySelector(DOMstrings.expenseLabel).textContent = obj.totalExp;
+
+            if (obj.percentage > 0) {
+                document.querySelector(DOMstrings.percentageLabel).textContent = obj.percentage + '%';
+            }
+            else {
+                document.querySelector(DOMstrings.percentageLabel).textContent = '---';
+            }
+        },
+
         // returning private DOMstrings into the public method; exposing DOMstrings object
         getDOMStrings: function () {
             return DOMstrings;
@@ -222,8 +239,9 @@ var controller = (function (budgetCtrl, UICtrl) {
         // 2. return the budget
         var budget = budgetCtrl.getBudget();
 
-        console.log(budget);
         // 3. display the budget on the UI 
+        // console.log(budget);
+        UICtrl.displayBudget(budget);
     }
 
     // function that is called when someone hits the input button or enter key 
@@ -257,6 +275,12 @@ var controller = (function (budgetCtrl, UICtrl) {
     return {
         init: function () {
             console.log('application has started');
+            UICtrl.displayBudget({
+                budget: 0,
+                totalInc: 0,
+                totalExp: 0,
+                percentage: -1
+            });
             setupEventListeners();
         }
     }

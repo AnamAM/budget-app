@@ -184,6 +184,13 @@ var UIController = (function () {
         return (type === 'exp' ? sign = '-' : sign = '+') + ' ' + int + '.' + dec;
     };
 
+
+    var nodeListForEach = function (list, callback) {
+        for (var i = 0; i < list.length; i++) {
+            callback(list[i], i);
+        }
+    };
+
     // public function/method to use in the other controller that will have to be in the object that the IIFE function will return
     return {
         getInput: function () {
@@ -256,12 +263,6 @@ var UIController = (function () {
         displayPercentages: function (percentages) {
             var fields = document.querySelectorAll(DOMstrings.expensesPercLabel);
 
-            var nodeListForEach = function (list, callback) {
-                for (var i = 0; i < list.length; i++) {
-                    callback(list[i], i);
-                }
-            };
-
             nodeListForEach(fields, function (current, index) {
                 if (percentages[index] > 0) {
                     // you want the first percentage at the first element and so on...
@@ -273,7 +274,7 @@ var UIController = (function () {
             });
         },
 
-        displayDate: function() {
+        displayDate: function () {
             var now, months, month, year;
 
             var now = new Date();
@@ -284,6 +285,19 @@ var UIController = (function () {
 
             year = now.getFullYear();
             document.querySelector(DOMstrings.dateLabel).textContent = months[month] + ' ' + year;
+        },
+
+        changedType: function () {
+            var fields = document.querySelectorAll(
+                DOMstrings.inputType + ',' +
+                DOMstrings.inputDescription + ',' +
+                DOMstrings.inputValue
+            );
+            nodeListForEach(fields, function (cur) {
+                // toggle adds red focus class when it's not there, and when it's there on an element, it will remove it 
+                cur.classList.toggle('red-focus');
+            });
+            document.querySelector(DOMstrings.inputBtn).classList.toggle('red');
         },
 
         // returning private DOMstrings into the public method; exposing DOMstrings object
@@ -313,6 +327,8 @@ var controller = (function (budgetCtrl, UICtrl) {
         });
         // event delegation started to delete incomes and expenses; used container class element primarily for this reason and did DOM traversing in ctrlDeleteItem function to move up to the parent element 
         document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
+
+        document.querySelector(DOM.inputType).addEventListener('change', UICtrl.changedType);
     };
 
     var updateBudget = function () {

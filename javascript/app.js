@@ -113,13 +113,13 @@ var budgetController = (function () {
 
         // calculate the expense percentages for each of the expense objects that are stored in the expenses array
         calculatePercentages: function () {
-            data.allItems.exp.forEach(function(cur) {
+            data.allItems.exp.forEach(function (cur) {
                 cur.calcPercentage(data.totals.inc);
             });
         },
 
-        getPercentages: function() {
-            var allPerc = data.allItems.exp.map(function(cur) {
+        getPercentages: function () {
+            var allPerc = data.allItems.exp.map(function (cur) {
                 return cur.getPercentage();
             });
             return allPerc;
@@ -159,6 +159,30 @@ var UIController = (function () {
         expensesPercLabel: '.item__percentage'
     };
 
+    var formatNumber = function (num, type) {
+        var numSplit, int, dec, type;
+
+        // + or - before number 
+        // abs stands for absolute which removes the sign off the number
+        num = Math.abs(num);
+
+        // adds exactly 2 decimal places; method of the number prototype
+        num = num.toFixed(2);
+
+        // comma separating the thousands
+        // splitting through the whole numbers and the decimal part -- will be stored in an array
+        numSplit = num.split('.');
+        int = numSplit[0]; // whole numbers
+        if (int.length > 3) {
+            // substr(0, 1) -- start at position 0, and only show ONE number
+            // substr(1, 3) -- start at position 1, and show THREE number
+            int = int.substr(0, int.length - 3) + ',' + int.substr(int.length - 3, 3);
+        }
+        dec = numSplit[1]; // decimal part
+        // returning - or +, a space, the number with commas, and decimals at the end
+        return (type === 'exp' ? sign = '-' : sign = '+') + ' ' + int + '.' + dec;
+    };
+
     // public function/method to use in the other controller that will have to be in the object that the IIFE function will return
     return {
         getInput: function () {
@@ -184,7 +208,7 @@ var UIController = (function () {
             // replace the placecolder text with some actual data
             newHtml = html.replace('%id%', obj.id);
             newHtml = newHtml.replace('%description%', obj.description);
-            newHtml = newHtml.replace('%value%', obj.value);
+            newHtml = newHtml.replace('%value%', formatNumber(obj.value, type));
 
             // insert the HTML into the DOM
             // beforeend keyword makes it so that all of the HTML will be inserted as a child of these containers (last child/last element in the list)
@@ -213,9 +237,12 @@ var UIController = (function () {
         },
 
         displayBudget: function (obj) {
-            document.querySelector(DOMstrings.budgetLabel).textContent = obj.budget;
-            document.querySelector(DOMstrings.incomeLabel).textContent = obj.totalInc;
-            document.querySelector(DOMstrings.expenseLabel).textContent = obj.totalExp;
+            var type;
+            obj.budget > 0 ? type = 'inc' : type = 'exp';
+
+            document.querySelector(DOMstrings.budgetLabel).textContent = formatNumber(obj.budget, type);
+            document.querySelector(DOMstrings.incomeLabel).textContent = formatNumber(obj.totalInc, 'inc');
+            document.querySelector(DOMstrings.expenseLabel).textContent = formatNumber(obj.totalExp, 'exp');
 
             if (obj.percentage > 0) {
                 document.querySelector(DOMstrings.percentageLabel).textContent = obj.percentage + '%';
@@ -225,17 +252,17 @@ var UIController = (function () {
             }
         },
 
-        displayPercentages: function(percentages) {
+        displayPercentages: function (percentages) {
             var fields = document.querySelectorAll(DOMstrings.expensesPercLabel);
 
-            var nodeListForEach = function(list, callback) {
+            var nodeListForEach = function (list, callback) {
                 for (var i = 0; i < list.length; i++) {
                     callback(list[i], i);
                 }
             };
 
-            nodeListForEach(fields, function(current, index) {
-                if (percentages[index] > 0 ) {
+            nodeListForEach(fields, function (current, index) {
+                if (percentages[index] > 0) {
                     // you want the first percentage at the first element and so on...
                     current.textContent = percentages[index] + '%';
                 }

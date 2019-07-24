@@ -1,33 +1,3 @@
-// module that handles budget data 
-// module patterns return an object containing all of the functions that we want public, bascially the functions that we want to give to the outside scope access to
-
-// var budgetController = (function() {
-//     var x = 23;
-//     // private add()
-//     var add = function(a) {
-//         return x + a;
-//     }
-//     return {
-//         publicTest: function(b) {
-//             return (add(b));
-//         }
-//     }
-// })();
-
-// // module that takes care of the UI
-// var UIController = (function() {
-// })();
-
-// // modules are function expressions and you can pass arguments into them
-// var controller = (function(budgetCtrl, UTCtrl) {
-//     var z = budgetController.publicTest(5);
-//     return {
-//         anotherPublic: function() {
-//             console.log(z);
-//         }
-//     }
-
-// })(budgetController, UIController);
 
 
 // budget controller
@@ -73,8 +43,9 @@ var budgetController = (function () {
             var newItem, ID;
 
             // create new ID
-            if (data.allItems[type].length > 10) {
+            if (data.allItems[type].length > 0) {
                 ID = data.allItems[type][data.allItems[type].length - 1].id + 1;
+                console.log(ID);
             }
             else {
                 ID = 0;
@@ -141,7 +112,8 @@ var UIController = (function () {
         budgetLabel: '.budget__value',
         incomeLabel: '.budget__income--value',
         expenseLabel: '.budget__expenses--value',
-        percentageLabel: '.budget__expenses--percentage'
+        percentageLabel: '.budget__expenses--percentage',
+        container: '.container'
     };
 
     // public function/method to use in the other controller that will have to be in the object that the IIFE function will return
@@ -160,11 +132,11 @@ var UIController = (function () {
             // create HTML string with placeholder text
             if (type === 'inc') {
                 element = DOMstrings.incomeContainer;
-                html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div> <div class="right clearfix"><div class="item__value">%value%</div> <div class="item__delete"> <button class="item__delete--btn"> <i class="ion-ios-close-outline"></i></button></div></div></div>';
+                html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div> <div class="right clearfix"><div class="item__value">%value%</div> <div class="item__delete"> <button class="item__delete--btn"> <i class="ion-ios-close-outline"></i></button></div></div></div>';
             }
             else if (type === 'exp') {
                 element = DOMstrings.expensesContainer;
-                html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+                html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
             }
             // replace the placecolder text with some actual data
             newHtml = html.replace('%id%', obj.id);
@@ -228,8 +200,12 @@ var controller = (function (budgetCtrl, UICtrl) {
                 // console.log('ENTER was pressed');
                 crtlAddItem();
             }
-        })
+        });
+        // event delegation for deleting items
+        document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
     }
+
+
 
     var updateBudget = function () {
 
@@ -270,6 +246,26 @@ var controller = (function (budgetCtrl, UICtrl) {
             alert('Please enter a valid description and/or value.');
         }
         // console.log('it works');
+    };
+
+    // in event delegation, an event bubbles up so we can know where it came from and where it was fired by looking at the target property of the event
+    var ctrlDeleteItem = function (event) {
+        var itemID, splitID, type, ID;
+
+        itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+
+        if (itemID) {
+            // inc-1
+            splitID = itemID.split('-');
+            type = splitID[0];
+            ID = splitID[1];
+
+            // 1. delete the item from the data structure 
+
+            // 2. delete the item from the UI 
+
+            // 3. update and show the new budget 
+        }
     };
 
     return {

@@ -1,5 +1,3 @@
-
-
 // budget controller
 var budgetController = (function () {
     // need a data model for expenses and incomes in this function
@@ -7,6 +5,22 @@ var budgetController = (function () {
         this.id = id;
         this.description = description;
         this.value = value;
+        this.percentage = -1;
+    };
+
+    // calculates percentage for each expense
+    Expense.prototype.calcPercentage = function (totalIncome) {
+        if (totalIncome > 0) {
+            this.percentage = Math.round((this.value / totalIncome) * 100);
+        }
+        else {
+            this.percentage = -1;
+        }
+    };
+
+    // returns percentage for each expense
+    Expense.prototype.getPercentage = function () {
+        return this.percentage;
     };
 
     var Income = function (id, description, value) {
@@ -88,13 +102,27 @@ var budgetController = (function () {
             // calculate the budget: income - expenses
             data.budget = data.totals.inc - data.totals.exp;
 
-            // calculate the percentage of income the at we spent
+            // calculate the percentage of income that we spent
             if (data.totals.inc > 0) {
                 data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
             }
             else {
                 data.percentage = -1;
             }
+        },
+
+        // calculate the expense percentages for each of the expense objects that are stored in the expenses array
+        calculatePercentages: function () {
+            data.allItems.exp.forEach(function(cur) {
+                cur.calcPercentage(data.totals.inc);
+            });
+        },
+
+        getPercentages: function() {
+            var allPerc = data.allItems.exp.map(function(cur) {
+                return cur.getPercentage();
+            });
+            return allPerc;
         },
 
         // method created to return something from data structure or from module so that you can get used to having functions that only retrieve or set data
@@ -110,7 +138,7 @@ var budgetController = (function () {
         testing: function () {
             console.log(data);
         }
-    }
+    };
 })();
 
 // UI controller
@@ -127,7 +155,8 @@ var UIController = (function () {
         incomeLabel: '.budget__income--value',
         expenseLabel: '.budget__expenses--value',
         percentageLabel: '.budget__expenses--percentage',
-        container: '.container'
+        container: '.container',
+        expensesPercLabel: '.item__percentage'
     };
 
     // public function/method to use in the other controller that will have to be in the object that the IIFE function will return
@@ -162,7 +191,7 @@ var UIController = (function () {
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
         },
 
-        deleteListItem: function(selectorID) {
+        deleteListItem: function (selectorID) {
             var el = document.getElementById(selectorID);
             el.parentNode.removeChild(el);
 
@@ -196,11 +225,31 @@ var UIController = (function () {
             }
         },
 
+        displayPercentages: function(percentages) {
+            var fields = document.querySelectorAll(DOMstrings.expensesPercLabel);
+
+            var nodeListForEach = function(list, callback) {
+                for (var i = 0; i < list.length; i++) {
+                    callback(list[i], i);
+                }
+            };
+
+            nodeListForEach(fields, function(current, index) {
+                if (percentages[index] > 0 ) {
+                    // you want the first percentage at the first element and so on...
+                    current.textContent = percentages[index] + '%';
+                }
+                else {
+                    current.textContent = '---';
+                }
+            });
+        },
+
         // returning private DOMstrings into the public method; exposing DOMstrings object
         getDOMStrings: function () {
             return DOMstrings;
         }
-    }
+    };
 })();
 
 // global app controller
@@ -223,11 +272,9 @@ var controller = (function (budgetCtrl, UICtrl) {
         });
         // event delegation started to delete incomes and expenses; used container class element primarily for this reason and did DOM traversing in ctrlDeleteItem function to move up to the parent element 
         document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
-    }
-
+    };
 
     var updateBudget = function () {
-
         // 1. calculate the budget 
         budgetCtrl.calculateBudget();
 
@@ -237,7 +284,19 @@ var controller = (function (budgetCtrl, UICtrl) {
         // 3. display the budget on the UI 
         // console.log(budget);
         UICtrl.displayBudget(budget);
-    }
+    };
+
+    var updatePercentages = function () {
+        // 1. calculate percentages
+        budgetCtrl.calculatePercentages();
+
+        // 2. read percentages from the budget controller
+        var percentages = budgetCtrl.getPercentages();
+
+        // 3. update the UI with the new percentages 
+        UICtrl.displayPercentages(percentages);
+        console.log(percentages);
+    };
 
     // function that is called when someone hits the input button or enter key 
     var crtlAddItem = function () {
@@ -260,6 +319,9 @@ var controller = (function (budgetCtrl, UICtrl) {
 
             // 5. calculate and update budget
             updateBudget();
+
+            // 6. calculate and update the percentages 
+            updatePercentages();
         }
         else {
             alert('Please enter a valid description and/or value.');
@@ -287,6 +349,9 @@ var controller = (function (budgetCtrl, UICtrl) {
 
             // 3. update and show the new budget 
             updateBudget();
+
+            // 4. calculate and update percentages 
+            updatePercentages();
         }
     };
 
@@ -301,7 +366,7 @@ var controller = (function (budgetCtrl, UICtrl) {
             });
             setupEventListeners();
         }
-    }
+    };
 
 })(budgetController, UIController);
 
